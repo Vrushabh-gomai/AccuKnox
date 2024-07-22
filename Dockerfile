@@ -1,18 +1,17 @@
-# Use an official lightweight image as a parent image
-FROM alpine:latest
+FROM ubuntu:20.04
 
-# Install necessary packages
-RUN apk --no-cache add bash ncurses cowsay fortune-mod netcat-openbsd
+# Update and install required packages
+RUN apt-get update \
+    && apt-get install -y netcat fortune \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables
-ENV SRVPORT=4499
-ENV RSPFILE=response
+# Copy application script
+COPY wisecow.sh /usr/local/bin/wisecow.sh
+RUN chmod +x /usr/local/bin/wisecow.sh
 
-# Copy the application script to the image
-COPY wisecow.sh /wisecow.sh
+# Expose port
+EXPOSE 4499
 
-# Make the script executable
-RUN chmod +x /wisecow.sh
-
-# Run the script
-CMD ["/wisecow.sh"]
+# Command to run the application
+CMD ["/usr/local/bin/wisecow.sh"]
