@@ -1,44 +1,39 @@
 pipeline {
     agent any
-    
+
     environment {
-        DOCKER_IMAGE = "<your-docker-registry>/wisecow:latest"
-        KUBE_CONFIG = credentials('kubeconfig')
+        DOCKER_HUB_USER = 'vrushabh015'
+        DOCKER_HUB_PASS = 'Vrushabh@89046'
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/Vrushabh-gomai/AccuKnox.git'
             }
         }
-        
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build(DOCKER_IMAGE)
+                    docker.build('vrushabh015/wisecow-app', '/var/lib/jenkins/workspace/Wisecow-Deployment')
                 }
             }
         }
-        
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        docker.image(DOCKER_IMAGE).push('latest')
-                    }
+                    sh 'echo $DOCKER_HUB_PASS | docker login -u $DOCKER_HUB_USER --password-stdin'
+                    sh 'docker push vrushabh015/wisecow-app:latest'
                 }
             }
         }
-        
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        sh 'kubectl apply -f wisecow-deployment.yaml'
-                        sh 'kubectl apply -f wisecow-service.yaml'
-                        sh 'kubectl apply -f wisecow-ingress.yaml'
-                    }
+                    // Apply Kubernetes manifests
+                    sh 'kubectl apply -f wisecow-deployment.yaml'
+                    sh 'kubectl apply -f wisecow-service.yaml'
+                    sh 'kubectl apply -f wisecow-ingress.yaml'
                 }
             }
         }
